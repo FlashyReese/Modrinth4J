@@ -1,18 +1,19 @@
 package me.flashyreese.modrinth4j.meta;
 
-import com.google.gson.FieldNamingPolicy;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import me.flashyreese.modrinth4j.Constants;
-import me.flashyreese.modrinth4j.Utils;
+import me.flashyreese.modrinth4j.SearchResultCallback;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Request;
+import okhttp3.Response;
+import org.jetbrains.annotations.NotNull;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.*;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class ModrinthQuery {
@@ -71,7 +72,36 @@ public class ModrinthQuery {
                 .collect(Collectors.joining("&", "https://api.modrinth.com/v2/search?", ""));
     }
 
-    public SearchResult results() {
-        return Constants.GSON.fromJson(Utils.fetchUrlContent(this.getUrlQuery()), SearchResult.class);
+    public void asyncResults(SearchResultCallback searchResultCallback) {
+        Request request = new Request.Builder()
+                .url(this.getUrlQuery())
+                .get()
+                .addHeader("User-Agent", "github_org/modrinth4j")
+                .build();
+        Call call = Constants.OK_HTTP_CLIENT.newCall(request);
+        call.enqueue(new Callback() {
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                if (response.body() == null) {
+                    searchResultCallback.onSearchResultError(new ResultError("Response error", "Empty body")); // Todo:
+                    return;
+                }
+
+                String body = Objects.requireNonNull(response.body()).string();
+                ResultError error = Constants.GSON.fromJson(body, ResultError.class);
+
+                if (error.getError() != null && error.getDescription() != null) {
+                    searchResultCallback.onSearchResultError(error);
+                    return;
+                }
+                SearchResult result = Constants.GSON.fromJson(body, SearchResult.class);
+                searchResultCallback.onSearchResultHit(result);
+            }
+
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                searchResultCallback.onSearchResultError(new ResultError("Response error", "Empty body")); // Todo:
+            }
+        });
     }
 }
