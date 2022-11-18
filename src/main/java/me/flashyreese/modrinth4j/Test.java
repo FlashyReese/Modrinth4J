@@ -1,15 +1,21 @@
 package me.flashyreese.modrinth4j;
 
+import me.flashyreese.modrinth4j.callback.ProjectCallback;
+import me.flashyreese.modrinth4j.callback.ProjectVersionCallback;
+import me.flashyreese.modrinth4j.callback.SearchResultCallback;
 import me.flashyreese.modrinth4j.meta.*;
 
-public class Test implements ProjectCallback, SearchResultCallback{
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+
+public class Test implements ProjectCallback, SearchResultCallback, ProjectVersionCallback {
     private int offset = 0;
-    private ModrinthQuery query = new ModrinthQuery()
-            .query("better")
+    private final ModrinthQuery query = new ModrinthQuery()
+            .query("fabulously optimized")
             .index(Index.RELEVANCE)
             .facet(new Facet.Builder()
                     .versions("1.16.5", "1.17.1", "1.18.2", "1.19.2")
-                    .projectTypes(ProjectType.MOD)
+                    .projectTypes(ProjectType.MOD_PACK)
                     .build())
             .limit(100);
 
@@ -23,12 +29,7 @@ public class Test implements ProjectCallback, SearchResultCallback{
 
     @Override
     public void onProjectHit(Project project) {
-        System.out.println(project.getTitle());
-    }
-
-    @Override
-    public void onProjectError(ResultError resultError) {
-
+        project.asyncVersions(this);
     }
 
     @Override
@@ -41,7 +42,7 @@ public class Test implements ProjectCallback, SearchResultCallback{
     }
 
     @Override
-    public void onSearchResultError(ResultError resultError) {
-
+    public void onProjectVersionHit(ProjectVersion projectVersion) {
+        System.out.println(projectVersion.getVersionNumber());
     }
 }

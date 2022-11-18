@@ -1,7 +1,7 @@
 package me.flashyreese.modrinth4j.meta;
 
 import me.flashyreese.modrinth4j.Constants;
-import me.flashyreese.modrinth4j.ProjectCallback;
+import me.flashyreese.modrinth4j.callback.ProjectCallback;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Request;
@@ -138,7 +138,7 @@ public class SearchProjectHit {
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 if (response.body() == null) {
-                    projectCallback.onProjectError(new ResultError("Response error", "Empty body")); // Todo:
+                    projectCallback.onError(new ResultError("Response error", "Empty body")); // Todo:
                     return;
                 }
 
@@ -146,7 +146,7 @@ public class SearchProjectHit {
                 ResultError error = Constants.GSON.fromJson(body, ResultError.class);
 
                 if (error.getError() != null && error.getDescription() != null) {
-                    projectCallback.onProjectError(error);
+                    projectCallback.onError(error);
                     return;
                 }
 
@@ -156,7 +156,7 @@ public class SearchProjectHit {
 
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                projectCallback.onProjectError(new ResultError("Response error", "Empty body")); // Todo:
+                projectCallback.onError(new ResultError("Response error", "Empty body")); // Todo:
             }
         });
     }

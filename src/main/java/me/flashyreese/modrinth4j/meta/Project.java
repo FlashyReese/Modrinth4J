@@ -1,6 +1,15 @@
 package me.flashyreese.modrinth4j.meta;
 
-import java.util.List;
+import me.flashyreese.modrinth4j.Constants;
+import me.flashyreese.modrinth4j.callback.ProjectVersionCallback;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Request;
+import okhttp3.Response;
+import org.jetbrains.annotations.NotNull;
+
+import java.io.IOException;
+import java.util.*;
 
 public class Project {
     private final String id;
@@ -30,6 +39,8 @@ public class Project {
     private final List<Donation> donationUrls;
     private final List<GalleryImage> gallery;
 
+    private Map<String, ProjectVersion> projectVersionMap = new HashMap<>();
+
     private Project(String id, String slug, String projectType, String team, String title, String description, String body, String bodyUrl, String published, String updated, String approved, String status, ModeratorMessage moderatorMessage, License license, String clientSide, String serverSide, int downloads, int followers, List<String> categories, List<String> additionalCategories, List<String> versions, String iconUrl, String issuesUrl, String wikiUrl, List<Donation> donationUrls, List<GalleryImage> gallery) {
         this.id = id;
         this.slug = slug;
@@ -57,6 +68,44 @@ public class Project {
         this.wikiUrl = wikiUrl;
         this.donationUrls = donationUrls;
         this.gallery = gallery;
+    }
+
+    public void asyncVersions(ProjectVersionCallback projectVersionCallback) {
+        this.versions.forEach(version -> {
+            String urlString = "https://api.modrinth.com/v2/version/" + version;
+
+            Request request = new Request.Builder()
+                    .url(urlString)
+                    .get()
+                    .addHeader("User-Agent", "github_org/modrinth4j")
+                    .build();
+            Call call = Constants.OK_HTTP_CLIENT.newCall(request);
+            call.enqueue(new Callback() {
+                @Override
+                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                    if (response.body() == null) {
+                        projectVersionCallback.onError(new ResultError("Response error", "Empty body")); // Todo:
+                        return;
+                    }
+
+                    String body = Objects.requireNonNull(response.body()).string();
+                    ResultError error = Constants.GSON.fromJson(body, ResultError.class);
+
+                    if (error.getError() != null && error.getDescription() != null) {
+                        projectVersionCallback.onError(error);
+                        return;
+                    }
+
+                    ProjectVersion result = Constants.GSON.fromJson(body, ProjectVersion.class);
+                    projectVersionCallback.onProjectVersionHit(result);
+                }
+
+                @Override
+                public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                    projectVersionCallback.onError(new ResultError("Response error", "Empty body")); // Todo:
+                }
+            });
+        });
     }
 
     public String getId() {
@@ -161,5 +210,9 @@ public class Project {
 
     public List<GalleryImage> getGallery() {
         return gallery;
+    }
+
+    public Map<String, ProjectVersion> getProjectVersionMap() {
+        return projectVersionMap;
     }
 }

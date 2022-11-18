@@ -5,12 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2fc1baaf-3812-417e-96b7-9fe8f381fe33" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/me/flashyreese/modrinth4j/Constants.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/me/flashyreese/modrinth4j/Constants.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/me/flashyreese/modrinth4j/ProjectCallback.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/me/flashyreese/modrinth4j/callback/ProjectCallback.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/me/flashyreese/modrinth4j/SearchResultCallback.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/me/flashyreese/modrinth4j/callback/SearchResultCallback.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/me/flashyreese/modrinth4j/Test.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/me/flashyreese/modrinth4j/Test.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/me/flashyreese/modrinth4j/Utils.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/me/flashyreese/modrinth4j/meta/ModrinthQuery.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/me/flashyreese/modrinth4j/meta/ModrinthQuery.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/me/flashyreese/modrinth4j/meta/Project.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/me/flashyreese/modrinth4j/meta/Project.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/me/flashyreese/modrinth4j/meta/SearchProjectHit.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/me/flashyreese/modrinth4j/meta/SearchProjectHit.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -69,6 +70,8 @@
       <option name="presentableId" value="Default" />
       <updated>1668660185276</updated>
       <workItem from="1668660186656" duration="11979000" />
+      <workItem from="1668717518642" duration="2310000" />
+      <workItem from="1668734308968" duration="2415000" />
     </task>
     <servers />
   </component>

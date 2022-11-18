@@ -1,7 +1,7 @@
 package me.flashyreese.modrinth4j.meta;
 
 import me.flashyreese.modrinth4j.Constants;
-import me.flashyreese.modrinth4j.SearchResultCallback;
+import me.flashyreese.modrinth4j.callback.SearchResultCallback;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Request;
@@ -83,7 +83,7 @@ public class ModrinthQuery {
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 if (response.body() == null) {
-                    searchResultCallback.onSearchResultError(new ResultError("Response error", "Empty body")); // Todo:
+                    searchResultCallback.onError(new ResultError("Response error", "Empty body")); // Todo:
                     return;
                 }
 
@@ -91,7 +91,7 @@ public class ModrinthQuery {
                 ResultError error = Constants.GSON.fromJson(body, ResultError.class);
 
                 if (error.getError() != null && error.getDescription() != null) {
-                    searchResultCallback.onSearchResultError(error);
+                    searchResultCallback.onError(error);
                     return;
                 }
                 SearchResult result = Constants.GSON.fromJson(body, SearchResult.class);
@@ -100,7 +100,7 @@ public class ModrinthQuery {
 
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                searchResultCallback.onSearchResultError(new ResultError("Response error", "Empty body")); // Todo:
+                searchResultCallback.onError(new ResultError("Response error", "Empty body")); // Todo:
             }
         });
     }
