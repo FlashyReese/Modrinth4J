@@ -1,7 +1,6 @@
-package me.flashyreese.modrinth4j.meta;
+package me.flashyreese.modrinth4j.meta.search;
 
 import me.flashyreese.modrinth4j.Constants;
-import me.flashyreese.modrinth4j.callback.SearchResultCallback;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Request;
@@ -14,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 public class ModrinthQuery {
@@ -72,7 +72,9 @@ public class ModrinthQuery {
                 .collect(Collectors.joining("&", "https://api.modrinth.com/v2/search?", ""));
     }
 
-    public void asyncResults(SearchResultCallback searchResultCallback) {
+    public CompletableFuture<SearchResult> queue() {
+        CompletableFuture<SearchResult> searchResultCompletableFuture = new CompletableFuture<>();
+
         Request request = new Request.Builder()
                 .url(this.getUrlQuery())
                 .get()
@@ -83,7 +85,7 @@ public class ModrinthQuery {
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 if (response.body() == null) {
-                    searchResultCallback.onError(new ResultError("Response error", "Empty body")); // Todo:
+                    //searchResultCallback.onError(new ResultError("Response error", "Empty body")); // Todo:
                     return;
                 }
 
@@ -91,17 +93,19 @@ public class ModrinthQuery {
                 ResultError error = Constants.GSON.fromJson(body, ResultError.class);
 
                 if (error.getError() != null && error.getDescription() != null) {
-                    searchResultCallback.onError(error);
+                    //searchResultCallback.onError(error);
                     return;
                 }
                 SearchResult result = Constants.GSON.fromJson(body, SearchResult.class);
-                searchResultCallback.onSearchResultHit(result);
+                searchResultCompletableFuture.complete(result);
             }
 
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                searchResultCallback.onError(new ResultError("Response error", "Empty body")); // Todo:
+                //searchResultCallback.onError(new ResultError("Response error", "Empty body")); // Todo:
             }
         });
+
+        return searchResultCompletableFuture;
     }
 }

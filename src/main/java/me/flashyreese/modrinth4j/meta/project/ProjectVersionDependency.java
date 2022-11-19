@@ -1,4 +1,4 @@
-package me.flashyreese.modrinth4j.meta;
+package me.flashyreese.modrinth4j.meta.project;
 
 public class ProjectVersionDependency {
     private final String versionId;

@@ -1,7 +1,7 @@
-package me.flashyreese.modrinth4j.meta;
+package me.flashyreese.modrinth4j.meta.search;
 
 import me.flashyreese.modrinth4j.Constants;
-import me.flashyreese.modrinth4j.callback.ProjectCallback;
+import me.flashyreese.modrinth4j.meta.project.Project;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Request;
@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 public class SearchProjectHit {
     private final String projectId;
@@ -125,7 +126,8 @@ public class SearchProjectHit {
         return gallery;
     }
 
-    public void asyncProject(ProjectCallback projectCallback) {
+    public CompletableFuture<Project> async() {
+        CompletableFuture<Project> projectCompletableFuture = new CompletableFuture<>();
         String urlString = "https://api.modrinth.com/v2/project/" + this.projectId;
 
         Request request = new Request.Builder()
@@ -138,7 +140,7 @@ public class SearchProjectHit {
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 if (response.body() == null) {
-                    projectCallback.onError(new ResultError("Response error", "Empty body")); // Todo:
+                    //projectCallback.onError(new ResultError("Response error", "Empty body")); // Todo:
                     return;
                 }
 
@@ -146,18 +148,19 @@ public class SearchProjectHit {
                 ResultError error = Constants.GSON.fromJson(body, ResultError.class);
 
                 if (error.getError() != null && error.getDescription() != null) {
-                    projectCallback.onError(error);
+                    //projectCallback.onError(error);
                     return;
                 }
 
                 Project result = Constants.GSON.fromJson(body, Project.class);
-                projectCallback.onProjectHit(result);
+                projectCompletableFuture.complete(result);
             }
 
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                projectCallback.onError(new ResultError("Response error", "Empty body")); // Todo:
+                //projectCallback.onError(new ResultError("Response error", "Empty body")); // Todo:
             }
         });
+        return projectCompletableFuture;
     }
 }

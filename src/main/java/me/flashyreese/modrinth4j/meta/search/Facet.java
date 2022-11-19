@@ -1,6 +1,7 @@
-package me.flashyreese.modrinth4j.meta;
+package me.flashyreese.modrinth4j.meta.search;
 
 import com.google.gson.JsonArray;
+import me.flashyreese.modrinth4j.meta.project.ProjectType;
 
 import java.util.ArrayList;
 import java.util.List;

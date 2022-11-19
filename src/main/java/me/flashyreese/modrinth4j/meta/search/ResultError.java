@@ -1,4 +1,4 @@
-package me.flashyreese.modrinth4j.meta;
+package me.flashyreese.modrinth4j.meta.search;
 
 public class ResultError {
     private final String error;
