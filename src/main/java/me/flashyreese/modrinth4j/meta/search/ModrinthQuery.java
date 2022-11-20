@@ -1,6 +1,7 @@
 package me.flashyreese.modrinth4j.meta.search;
 
 import me.flashyreese.modrinth4j.Constants;
+import me.flashyreese.modrinth4j.callback.SearchResultCallback;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Request;
@@ -70,6 +71,39 @@ public class ModrinthQuery {
         return requestParameters.keySet().stream()
                 .map(key -> key + "=" + URLEncoder.encode(requestParameters.get(key), StandardCharsets.UTF_8))
                 .collect(Collectors.joining("&", "https://api.modrinth.com/v2/search?", ""));
+    }
+
+    public void registerCallback(SearchResultCallback callback) {
+        Request request = new Request.Builder()
+                .url(this.getUrlQuery())
+                .get()
+                .addHeader("User-Agent", "github_org/modrinth4j")
+                .build();
+        Call call = Constants.OK_HTTP_CLIENT.newCall(request);
+        call.enqueue(new Callback() {
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                if (response.body() == null) {
+                    callback.onError(new ResultError("Response error", "Empty body")); // Todo:
+                    return;
+                }
+
+                String body = Objects.requireNonNull(response.body()).string();
+                ResultError error = Constants.GSON.fromJson(body, ResultError.class);
+
+                if (error.getError() != null && error.getDescription() != null) {
+                    callback.onError(error);
+                    return;
+                }
+                SearchResult result = Constants.GSON.fromJson(body, SearchResult.class);
+                callback.onSearchResult(result);
+            }
+
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                callback.onError(new ResultError("Response error", "Empty body")); // Todo:
+            }
+        });
     }
 
     public CompletableFuture<SearchResult> queue() {

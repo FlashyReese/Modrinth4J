@@ -1,6 +1,7 @@
 package me.flashyreese.modrinth4j.meta.project;
 
 import me.flashyreese.modrinth4j.Constants;
+import me.flashyreese.modrinth4j.callback.ProjectVersionCallback;
 import me.flashyreese.modrinth4j.meta.search.ResultError;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -9,7 +10,10 @@ import okhttp3.Response;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 public class Project {
@@ -67,6 +71,42 @@ public class Project {
         this.wikiUrl = wikiUrl;
         this.donationUrls = donationUrls;
         this.gallery = gallery;
+    }
+
+    public void registerCallback(ProjectVersionCallback callback) {
+        this.versions.forEach(version -> {
+            String urlString = "https://api.modrinth.com/v2/version/" + version;
+            Request request = new Request.Builder()
+                    .url(urlString)
+                    .get()
+                    .addHeader("User-Agent", "github_org/modrinth4j")
+                    .build();
+            Call call = Constants.OK_HTTP_CLIENT.newCall(request);
+            call.enqueue(new Callback() {
+                @Override
+                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                    if (response.body() == null) {
+                        callback.onError(new ResultError("Response error", "Empty body")); // Todo:
+                        return;
+                    }
+
+                    String body = Objects.requireNonNull(response.body()).string();
+                    ResultError error = Constants.GSON.fromJson(body, ResultError.class);
+
+                    if (error.getError() != null && error.getDescription() != null) {
+                        callback.onError(error);
+                        return;
+                    }
+                    ProjectVersion result = Constants.GSON.fromJson(body, ProjectVersion.class);
+                    callback.onProjectVersion(result);
+                }
+
+                @Override
+                public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                    callback.onError(new ResultError("Response error", "Empty body")); // Todo:
+                }
+            });
+        });
     }
 
     public Map<String, CompletableFuture<ProjectVersion>> queue() {

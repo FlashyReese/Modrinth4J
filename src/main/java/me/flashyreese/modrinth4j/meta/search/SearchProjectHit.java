@@ -1,6 +1,7 @@
 package me.flashyreese.modrinth4j.meta.search;
 
 import me.flashyreese.modrinth4j.Constants;
+import me.flashyreese.modrinth4j.callback.ProjectCallback;
 import me.flashyreese.modrinth4j.meta.project.Project;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -126,7 +127,41 @@ public class SearchProjectHit {
         return gallery;
     }
 
-    public CompletableFuture<Project> async() {
+    public void registerCallback(ProjectCallback callback) {
+        String urlString = "https://api.modrinth.com/v2/project/" + this.projectId;
+        Request request = new Request.Builder()
+                .url(urlString)
+                .get()
+                .addHeader("User-Agent", "github_org/modrinth4j")
+                .build();
+        Call call = Constants.OK_HTTP_CLIENT.newCall(request);
+        call.enqueue(new Callback() {
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                if (response.body() == null) {
+                    callback.onError(new ResultError("Response error", "Empty body")); // Todo:
+                    return;
+                }
+
+                String body = Objects.requireNonNull(response.body()).string();
+                ResultError error = Constants.GSON.fromJson(body, ResultError.class);
+
+                if (error.getError() != null && error.getDescription() != null) {
+                    callback.onError(error);
+                    return;
+                }
+                Project result = Constants.GSON.fromJson(body, Project.class);
+                callback.onProject(result);
+            }
+
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                callback.onError(new ResultError("Response error", "Empty body")); // Todo:
+            }
+        });
+    }
+
+    public CompletableFuture<Project> queue() {
         CompletableFuture<Project> projectCompletableFuture = new CompletableFuture<>();
         String urlString = "https://api.modrinth.com/v2/project/" + this.projectId;
 

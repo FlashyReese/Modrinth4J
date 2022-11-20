@@ -1,5 +1,7 @@
 plugins {
-    id 'java'
+    id 'java-library'
+    id 'signing'
+    id 'maven-publish'
 }
 
 group 'me.flashyreese'
@@ -12,4 +14,30 @@ repositories {
 dependencies {
     implementation "com.squareup.okhttp3:okhttp:4.10.0"
     implementation 'com.google.code.gson:gson:2.10'
+}
+
+publishing {
+    publications {
+        library(MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            name = "FlashyReeseReleases"
+            url = "https://maven.flashyreese.me/releases"
+            credentials {
+                username = System.getenv("MAVEN_USERNAME")
+                password = System.getenv("MAVEN_PASSWORD")
+            }
+        }
+        maven {
+            name = "FlashyReeseSnapshots"
+            url = "https://maven.flashyreese.me/snapshots"
+            credentials {
+                username = System.getenv("MAVEN_USERNAME")
+                password = System.getenv("MAVEN_PASSWORD")
+            }
+        }
+    }
 }

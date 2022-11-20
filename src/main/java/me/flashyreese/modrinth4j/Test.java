@@ -23,7 +23,7 @@ public class Test {
             if (!hit.getTitle().equals("Fabulously Optimized"))
                 return;
             System.out.println(hit.getTitle());
-            Project project = hit.async().get();
+            Project project = hit.queue().get();
             Map<String, CompletableFuture<ProjectVersion>> stringCompletableFutureMap =  project.queue();
             for (Map.Entry<String, CompletableFuture<ProjectVersion>> stringCompletableFutureEntry : stringCompletableFutureMap.entrySet()) {
                 System.out.println(stringCompletableFutureEntry.getValue().get().getVersionNumber());
