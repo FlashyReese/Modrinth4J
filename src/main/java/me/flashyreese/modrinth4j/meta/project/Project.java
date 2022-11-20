@@ -1,7 +1,9 @@
 package me.flashyreese.modrinth4j.meta.project;
 
+import com.google.gson.reflect.TypeToken;
 import me.flashyreese.modrinth4j.Constants;
 import me.flashyreese.modrinth4j.callback.ProjectVersionCallback;
+import me.flashyreese.modrinth4j.callback.ProjectVersionsCallback;
 import me.flashyreese.modrinth4j.meta.search.ResultError;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -10,10 +12,7 @@ import okhttp3.Response;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class Project {
@@ -73,7 +72,78 @@ public class Project {
         this.gallery = gallery;
     }
 
-    public void registerCallback(ProjectVersionCallback callback) {
+    public void registerCallbackList(ProjectVersionsCallback callback) {
+        String urlString = "https://api.modrinth.com/v2/project/" + this.id + "/version";
+        Request request = new Request.Builder()
+                .url(urlString)
+                .get()
+                .addHeader("User-Agent", "github_org/modrinth4j")
+                .build();
+        Call call = Constants.OK_HTTP_CLIENT.newCall(request);
+        call.enqueue(new Callback() {
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                if (response.body() == null) {
+                    callback.onError(new ResultError("Response error", "Empty body")); // Todo:
+                    return;
+                }
+
+                String body = Objects.requireNonNull(response.body()).string();
+                ResultError error = Constants.GSON.fromJson(body, ResultError.class);
+
+                if (error.getError() != null && error.getDescription() != null) {
+                    callback.onError(error);
+                    return;
+                }
+                List<ProjectVersion> result = Constants.GSON.fromJson(body, TypeToken.getParameterized(ArrayList.class, ProjectVersion.class).getType());
+                callback.onProjectVersions(result);
+            }
+
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                callback.onError(new ResultError("Response error", "Empty body")); // Todo:
+            }
+        });
+    }
+
+    public CompletableFuture<List<ProjectVersion>> queueList() {
+        CompletableFuture<List<ProjectVersion>> projectVersionCompletableFuture = new CompletableFuture<>();
+        String urlString = "https://api.modrinth.com/v2/project/" + this.id + "/version";
+        Request request = new Request.Builder()
+                .url(urlString)
+                .get()
+                .addHeader("User-Agent", "github_org/modrinth4j")
+                .build();
+        Call call = Constants.OK_HTTP_CLIENT.newCall(request);
+        call.enqueue(new Callback() {
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                if (response.body() == null) {
+                    //callback.onError(new ResultError("Response error", "Empty body")); // Todo:
+                    return;
+                }
+
+                String body = Objects.requireNonNull(response.body()).string();
+                ResultError error = Constants.GSON.fromJson(body, ResultError.class);
+
+                if (error.getError() != null && error.getDescription() != null) {
+                    //callback.onError(error);
+                    return;
+                }
+                List<ProjectVersion> result = Constants.GSON.fromJson(body, TypeToken.getParameterized(ArrayList.class, ProjectVersion.class).getType());
+                projectVersionCompletableFuture.complete(result);
+            }
+
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                //callback.onError(new ResultError("Response error", "Empty body")); // Todo:
+            }
+        });
+        return projectVersionCompletableFuture;
+    }
+
+    // Todo: all single lookup but probably useless.
+    public void registerCallbackSingle(ProjectVersionCallback callback) {
         this.versions.forEach(version -> {
             String urlString = "https://api.modrinth.com/v2/version/" + version;
             Request request = new Request.Builder()
@@ -109,7 +179,8 @@ public class Project {
         });
     }
 
-    public Map<String, CompletableFuture<ProjectVersion>> queue() {
+    // Todo: all single lookup but probably useless.
+    public Map<String, CompletableFuture<ProjectVersion>> queueSingle() {
         Map<String, CompletableFuture<ProjectVersion>> stringCompletableFutureMap = new HashMap<>();
 
         this.versions.forEach(version -> {
